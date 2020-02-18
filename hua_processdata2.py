@@ -44,10 +44,8 @@ def readfile(filename,max_seq_len):
         reader=csv.reader(f,delimiter=',')
         next(reader)
         for line in tqdm(reader,total=num_lines):
-
             subjid,admid,label,text_a=line
             label=label=='True'
-
             text_a=tokenizer.tokenize(text_a)
             if (len(text_a)>max_seq_len-2):
                 text_a=text_a[0:max_seq_len-2]
@@ -116,10 +114,8 @@ def get_roc(res,filename):
     label=res.groupby('admid').true_labels.agg(min)
     pred_labels=res.groupby('admid').pred_labels.agg(sum)/res.groupby('admid').pred_labels.agg(len)>0.5
     accuracy_subj=sum(label==pred_labels)/len(label)*100
-
     tpr,fpr,thresholds=roc_curve(label,score)
     auc_score=auc(tpr,fpr)
-
     ##doing plot
     plt.figure(figsize=(10,5))
     plt.subplot(121)
@@ -145,7 +141,6 @@ def get_roc(res,filename):
     rp80=np.NaN
     if prec_rec_df.size()>0:
         rp80=prec_rec_df.iloc[0].recall
-
     return auc_score,auc_score2,accuracy_overal,accuracy_subj,rp80
 
 for epoch in range(EPOCHS):
