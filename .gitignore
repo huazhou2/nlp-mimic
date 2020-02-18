@@ -1,0 +1,5 @@
+# exclude data related csv file and saved trained model file
+*.csv
+*.mdl
+*.zip
+*.bin

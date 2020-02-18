@@ -1,0 +1,7 @@
+setup mysql to remove load data local security blockage
+
+1. sudo /usr/local/mysql/support-files/mysql.server start --local-infile=OFF on server side
+2. mysql -u root -p --local-infile=1     ##on client side, with password wolfsky041
+3. SET GLOBAL local_infile=1;  #inside client
+
+
