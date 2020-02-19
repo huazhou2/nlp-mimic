@@ -153,6 +153,7 @@ for epoch in range(EPOCHS):
     print('doing epoch : ',epoch+1,'\n')
     for step,batch in enumerate(train_loader):
         #batch=next(iter(train_loader))
+        batch=tuple(item.to(device) for item in batch)
         input_ids,input_mask,segment_ids,labels=batch
 
         outputs=model(input_ids,input_mask,segment_ids,labels=labels)
@@ -166,7 +167,7 @@ for epoch in range(EPOCHS):
         model.zero_grad()
         if step % 10 == 0:
             pred=torch.max(logits,1)[1]
-            correct=pred.eq(labels).numpy()
+            correct=pred.eq(labels).cpu().numpy()
             print('step: %d  loss: %.2f   accuracy: %.2f%%' % (step,loss,(np.sum(correct) / len(correct) * 100)))
         if step and step % 100 == 0:
             state = {
@@ -189,14 +190,19 @@ for epoch in range(EPOCHS):
             pred_probs=[]
             admids=[]
             for adm_ids,input_ids,input_mask,segment_ids,labels in tqdm(eval_loader):
+                adm_ids=adm_ids.to(device)
+                input_ids=input_ids.to(device)
+                input_mask=input_mask.to(device)
+                segment_ids=segment_ids.to(device)
+                labels=labels.to(device)
                 with torch.no_grad():
                     print('.')
                     outputs=model(input_ids,input_mask,segment_ids,labels=labels)
                     loss,logits=outputs[:2]
-                    admids.extend(adm_ids.numpy())
-                    true_labels.extend(labels.numpy())
-                    pred_labels.extend(torch.max(logits,1)[1].numpy())
-                    pred_probs.extend(torch.softmax(logits,1)[:,1].detach().numpy())
+                    admids.extend(adm_ids.cpu().numpy())
+                    true_labels.extend(labels.cpu().numpy())
+                    pred_labels.extend(torch.max(logits,1)[1].cpu().numpy())
+                    pred_probs.extend(torch.softmax(logits,1)[:,1].detach().cpu().numpy())
             res=pd.DataFrame({'admid':admids,'true_labels':true_labels,'pred_labels':pred_labels,'pred_probs':pred_probs})
             res.to_csv('pred_res.csv',index=False)
             os.makedirs('val_model',exist_ok=True)
