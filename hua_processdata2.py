@@ -92,7 +92,13 @@ scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=NUM_WARM
 
 model.train()
 
+###check if gpu
 
+if torch.cuda.is_available():
+    device=torch.device('cuda')
+model.to(device)
+if torch.cuda.device_count()>1:
+    model=torch.nn.DataParallel(model)
 
 eval_features=readfile(filename2,512)
 
@@ -151,16 +157,18 @@ for epoch in range(EPOCHS):
 
         outputs=model(input_ids,input_mask,segment_ids,labels=labels)
         loss, logits=outputs[:2]
+        if torch.cuda.device_count()>1:
+            loss=loss.mean()
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)  # Gradient clipping is not in AdamW anymore (so you can use amp without issue)
         optimizer.step()
         scheduler.step()
         model.zero_grad()
-        if step % 5 == 0:
+        if step % 10 == 0:
             pred=torch.max(logits,1)[1]
             correct=pred.eq(labels).numpy()
             print('step: %d  loss: %.2f   accuracy: %.2f%%' % (step,loss,(np.sum(correct) / len(correct) * 100)))
-        if step and step % 5 == 0:
+        if step and step % 100 == 0:
             state = {
                 'epoch': epoch,
                 'state_dict': model.state_dict(),
